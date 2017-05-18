@@ -3,19 +3,25 @@ using UnityEngine;
 
 public class Turret : MonoBehaviour {
 
-    [Header("Attributes")]
-    public float turnSpeed = 10f;
+    [Header("General")]
+    public float range = 15f;
+
+    [Header("Use Bullets (default)")]
     public float fireRate = 2f;
     private float fireCountdown = 0f;
-    public float range = 15f;
+    public GameObject bulletPrefab;
+
+    [Header("Use Bullets")]
+    public bool useLaser = false;
+    public LineRenderer lineRenderer;
 
     [Header("Unity Setup Fields")]
     public Transform target;
     public Transform partToRotate;
-    public GameObject bulletPrefab;
     public Transform firePoint;
+    public float turnSpeed = 10f;
 
-    private string enemyTag = "Enemy";
+    public string enemyTag = "Enemy";
 
     void Start ()
     {
@@ -26,23 +32,57 @@ public class Turret : MonoBehaviour {
     {
         if (target == null)
         {
+            if (useLaser)
+            {
+                if (lineRenderer.enabled)
+                {
+                    lineRenderer.enabled = false; if (lineRenderer.enabled)
+                    {
+                        lineRenderer.enabled = false;
+                    }
+                }
+            }
+
             return;
         }
 
+        LockOnTarget();
+
+        if (useLaser)
+        {
+            Laser();
+        }
+        else
+        {
+            if (fireCountdown <= 0f)
+            {
+                Shoot();
+                fireCountdown = 1f / fireRate;
+            }
+
+            fireCountdown -= Time.deltaTime;
+        }
+    }
+
+    private void Laser()
+    {
+        if (!lineRenderer.enabled)
+        {
+            lineRenderer.enabled = true;
+        }
+
+        lineRenderer.SetPosition(0, firePoint.position);
+        lineRenderer.SetPosition(1, target.position);
+    }
+
+    private void LockOnTarget()
+    {
         Vector3 dir = target.position - transform.position;
         Quaternion lookRotation = Quaternion.LookRotation(dir);
         Vector3 rotation = Quaternion.Lerp(partToRotate.rotation, lookRotation, Time.deltaTime * turnSpeed).eulerAngles;
         partToRotate.rotation = Quaternion.Euler(0, rotation.y, 0);
+    }
 
-        if (fireCountdown <= 0f)
-        {
-            Shoot();
-            fireCountdown = 1f/fireRate;
-        }
-
-        fireCountdown -= Time.deltaTime;
-	}
-    
     void OnDrawGizmosSelected()
     {
         Gizmos.color = Color.red;

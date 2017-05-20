@@ -2,12 +2,29 @@
 
 public class GameManager : MonoBehaviour {
 
-    private bool gameEnded;
+    public static bool GameIsOver;
+
+    public GameObject gameOverUI;
+
+    void Start()
+    {
+        GameIsOver = false;
+    }
 
 	void Update () {
+        if (GameIsOver)
+        {
+            return;
+        }
+
+        if (Input.GetKeyDown("e"))
+        {
+            EndGame();
+        }
+
         if (PlayerStats.Lives <= 0)
         {
-            if (!gameEnded)
+            if (!GameIsOver)
             {
                 EndGame();
             }
@@ -16,7 +33,8 @@ public class GameManager : MonoBehaviour {
 
     private void EndGame()
     {
-        gameEnded = true;
-        Debug.Log("GAME OVER!!!!!!");
+        GameIsOver = true;
+
+        gameOverUI.SetActive(true);
     }
 }

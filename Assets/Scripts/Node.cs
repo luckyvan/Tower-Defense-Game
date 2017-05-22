@@ -7,8 +7,12 @@ public class Node : MonoBehaviour {
     public Color notEnoughMoneyColor;
     private Color startColor;
 
-    [Header("Optional")]
+    [Header("HideInInspector")]
     public GameObject turret;
+    [Header("HideInInspector")]
+    public TurretBlueprint turretBlueprint;
+    [Header("HideInInspector")]
+    public bool isUpgraded = false;
 
     private Renderer rend;
     private Vector3 positionOffset = new Vector3(0, 0.5f, 0);
@@ -36,7 +40,7 @@ public class Node : MonoBehaviour {
         if (!buildManager.CanBuild)
             return;
 
-        buildManager.BuildTurretOn(this);
+        BuildTurret(buildManager.GetTurretToBuild());
     }
 
     void OnMouseEnter()
@@ -65,5 +69,47 @@ public class Node : MonoBehaviour {
     public Vector3 GetBuildPosition()
     {
         return transform.position + positionOffset;
+    }
+
+    public void BuildTurret(TurretBlueprint blueprint)
+    {
+        if (PlayerStats.Money < blueprint.cost)
+        {
+            Debug.Log("Not enough money to build that");
+            return;
+        }
+
+        PlayerStats.Money -= blueprint.cost;
+
+        GameObject _turret = (GameObject)Instantiate(blueprint.prefab, GetBuildPosition(), transform.rotation);
+        this.turret = _turret;
+
+        GameObject effect = (GameObject)Instantiate(buildManager.buildEffect, GetBuildPosition(), Quaternion.identity);
+        Destroy(effect, 5f);
+
+        turretBlueprint = blueprint;
+    }
+
+    public void UpgradeTurret()
+    {
+        if (PlayerStats.Money < turretBlueprint.upgradeCost)
+        {
+            Debug.Log("Not enough money to upgrade that");
+            return;
+        }
+
+        PlayerStats.Money -= turretBlueprint.upgradeCost;
+
+        //Get Rid of Old one
+        Destroy(turret);
+
+        //Build New One
+        GameObject _turret = (GameObject)Instantiate(turretBlueprint.upgradedPrefab, GetBuildPosition(), transform.rotation);
+        this.turret = _turret;
+
+        GameObject effect = (GameObject)Instantiate(buildManager.buildEffect, GetBuildPosition(), Quaternion.identity);
+        Destroy(effect, 5f);
+
+        isUpgraded = true;
     }
 }
